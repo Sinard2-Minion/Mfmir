@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MFMIR — Платформа</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#06040a;--bg2:#0d0815;--bg3:#161022;--bg4:#1f1730;
@@ -35,7 +42,6 @@ img{max-width:100%}
 @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* ============ AUTH ============ */
 #auth{position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
 #auth::before{
   content:'';position:absolute;inset:0;
@@ -55,7 +61,6 @@ img{max-width:100%}
 .auth-logo{font-size:2.4rem;font-weight:700;letter-spacing:3px;margin-bottom:.3rem;text-align:center}
 .auth-logo span{color:var(--red);text-shadow:0 0 24px var(--red-glow)}
 .auth-sub{color:var(--tx2);font-size:.85rem;margin-bottom:1.6rem;text-align:center}
-
 .auth-tabs{
   display:flex;background:linear-gradient(135deg,#1a0a26,#0d0815);
   border-radius:12px;padding:.3rem;margin-bottom:1.4rem;
@@ -461,6 +466,42 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
   .modal{padding:1.3rem}
 }
 </style>
+</head>
+<body>
+
+<!-- ============ AUTH (простая — без кодов) ============ -->
+<div id="auth">
+  <div class="auth-box">
+    <div class="auth-logo">MF<span>MIR</span></div>
+    <div class="auth-sub">Платформа сообщества железнодорожников</div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuth('login')">Войти</div>
+      <div class="auth-tab" onclick="switchAuth('register')">Регистрация</div>
+    </div>
+
+    <div id="auth-err" class="auth-error"></div>
+
+    <div id="tab-login">
+      <div class="field-label">Email или логин</div>
+      <input class="field" id="li-email" type="text" placeholder="your@email.com" autocomplete="username">
+      <div class="field-label">Пароль</div>
+      <input class="field" id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+      <button class="btn btn-red btn-full" onclick="doLogin()">Войти</button>
+    </div>
+
+    <div id="tab-reg" class="hidden">
+      <div class="field-label">Email</div>
+      <input class="field" id="rg-email" type="email" placeholder="your@email.com" autocomplete="email">
+      <div class="field-label">Пароль (мин. 6 символов)</div>
+      <input class="field" id="rg-pass" type="password" placeholder="••••••••" autocomplete="new-password">
+      <div class="field-label">Повторите пароль</div>
+      <input class="field" id="rg-pass2" type="password" placeholder="••••••••" autocomplete="new-password">
+      <button class="btn btn-red btn-full" onclick="startReg()">Создать аккаунт</button>
+      <div class="auth-notice">С одного email — <b>только один аккаунт</b>.</div>
+    </div>
+  </div>
+</div>
 <!-- ============ MAIN APP ============ -->
 <div class="app" id="app" style="display:none">
   <div class="main-wrap">
@@ -613,7 +654,7 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
         <div id="guides-list"></div>
       </div>
 
-      <!-- ============ КАРТЫ (с сортировкой) ============ -->
+      <!-- ============ КАРТЫ ============ -->
       <div class="page" id="page-maps">
         <div class="page-header">
           <div class="page-title">Кар<span>ты</span></div>
@@ -631,7 +672,7 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
         <div id="maps-list"></div>
       </div>
 
-      <!-- ============ ПАКИ (с сортировкой) ============ -->
+      <!-- ============ ПАКИ ============ -->
       <div class="page" id="page-packs">
         <div class="page-header">
           <div class="page-title">Па<span>ки</span></div>
@@ -775,12 +816,11 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
           <button class="pc-tab" data-tab="punish" onclick="switchProfileTab('punish')">⚖️ Наказания</button>
         </div>
 
-        <!-- Профиль -->
         <div class="pc-pane" id="pc-profile">
           <div class="card mb-2">
             <div class="card-title">🖼️ Аватар</div>
             <div style="display:flex;gap:1.1rem;flex-wrap:wrap;align-items:center">
-              <div id="pf-av-prev" style="width:96px;height:96px;background:linear-gradient(135deg,var(--red),#a01008);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;overflow:hidden;flex-shrink:0;border-radius:50%;box-shadow:0 4px 24px var(--red-glow)">U</div>
+              <div id="pf-av-prev" style="width:96px;height:96px;background:linear-gradient(135deg,#a855f7,#7e22ce);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;overflow:hidden;flex-shrink:0;border-radius:50%;box-shadow:0 4px 24px var(--red-glow)">U</div>
               <div style="flex:1;min-width:220px">
                 <input type="file" id="pf-av-file" accept="image/*" class="hidden" onchange="onPfAvatar(this)">
                 <button class="btn btn-red" onclick="document.getElementById('pf-av-file').click()">📤 Загрузить</button>
@@ -808,17 +848,14 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
           </div>
         </div>
 
-        <!-- Мои заявки -->
         <div class="pc-pane hidden" id="pc-tickets">
           <div id="pc-tickets-list"></div>
         </div>
 
-        <!-- Мои скриншоты -->
         <div class="pc-pane hidden" id="pc-shots">
           <div id="pc-shots-list"></div>
         </div>
 
-        <!-- Наказания -->
         <div class="pc-pane hidden" id="pc-punish">
           <div id="pc-punish-list"></div>
         </div>
@@ -1125,7 +1162,7 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
   <div id="confirm-text" style="font-size:.9rem;color:var(--tx2);margin-bottom:1.3rem;line-height:1.6"></div>
   <div style="display:flex;gap:.6rem">
     <button class="btn btn-ghost" style="flex:1" onclick="closeModal('m-confirm')">Отмена</button>
-    <button class="btn btn-red" style="flex:1" id="confirm-btn">Удалить</button>
+    <button class="btn btn-danger" style="flex:1" id="confirm-btn">Удалить</button>
   </div>
 </div></div>
 
@@ -1136,7 +1173,7 @@ footer{background:linear-gradient(180deg,#08050f,#050309);border-top:1px solid v
   <textarea class="field" id="reason-text" rows="4" placeholder="Опишите, почему заявка отклонена. Это увидит пользователь в личном кабинете."></textarea>
   <div style="display:flex;gap:.6rem">
     <button class="btn btn-ghost" style="flex:1" onclick="closeModal('m-reason')">Отмена</button>
-    <button class="btn btn-red" style="flex:1" id="reason-submit">Отклонить</button>
+    <button class="btn btn-danger" style="flex:1" id="reason-submit">Отклонить</button>
   </div>
 </div></div>
 
@@ -1372,7 +1409,7 @@ function applyPermissions(){
 }
 function updateSidebar(){
   if(!ME) return;
-  const r = ROLES.find(x=>x.id===ME.role) || {color:'#e0180f', name:ME.roleName||'—'};
+  const r = ROLES.find(x=>x.id===ME.role) || {color:'#a855f7', name:ME.roleName||'—'};
   const av = document.getElementById('sb-av');
   if(ME.avatar){ av.innerHTML = '<img src="'+ME.avatar+'">'; av.style.background='transparent'; }
   else { av.textContent = (ME.nickname||'?')[0].toUpperCase(); av.style.background = r.color; }
@@ -1407,7 +1444,7 @@ async function renderNews(){
     const tlm = { NEWS:'Новость', AD:'Реклама', STORY:'История', UPDATE:'Обновление' };
     el.innerHTML = NEWS.map(n => {
       const shot = n.screenshot ? '<div style="margin:.9rem 0"><img src="'+n.screenshot+'" style="max-width:100%;max-height:460px;object-fit:cover;border:1px solid var(--bd2);cursor:pointer;display:block;border-radius:var(--radius-sm)" onclick="openImg(\''+n.screenshot+'\')"></div>' : '';
-      const actions = can('publishNews') ? '<button class="btn btn-ghost btn-sm" onclick="openNewsEditor('+n.id+')">✏️</button> <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="delNews('+n.id+')">🗑</button>' : '';
+      const actions = can('publishNews') ? '<button class="btn btn-ghost btn-sm" onclick="openNewsEditor('+n.id+')">✏️</button> <button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="delNews('+n.id+')">🗑</button>' : '';
       return '<div class="news"><div class="news-t">'+(tlm[n.type]||n.type)+'</div><div class="news-h">'+esc(n.title)+'</div>'+shot+'<div class="news-b">'+esc(n.body)+'</div><div class="news-f"><span>👤 '+esc(n.author)+'</span><span>📅 '+esc(n.date)+'</span>'+actions+'</div></div>';
     }).join('');
   }catch(e){ toast(e.message,'error'); }
@@ -1499,7 +1536,7 @@ function ssCard(s){
     ? '<div class="ss-status"><span class="badge b-ye">На проверке</span>'+
       (canDel ? ' <button class="btn btn-ghost btn-sm" onclick="approveSS('+s.id+')">✅</button> <button class="btn btn-ghost btn-sm" onclick="rejectSS('+s.id+')">❌</button>' : '')+'</div>'
     : '<div class="ss-status"><span class="badge b-gr">Одобрено</span></div>';
-  const db = canDel ? '<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000;margin-left:auto" onclick="event.stopPropagation();delSS('+s.id+')">🗑</button>' : '';
+  const db = canDel ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000;margin-left:auto" onclick="event.stopPropagation();delSS('+s.id+')">🗑</button>' : '';
   return '<div class="ss"><div class="ss-img" onclick="openImg(\''+s.img+'\')"><img src="'+s.img+'"></div>'+
     '<div class="ss-body"><div class="ss-meta"><span>👤 '+esc(s.author)+'</span>'+
     (s.place?'<span>📍 '+esc(s.place)+'</span>':'')+
@@ -1570,7 +1607,7 @@ async function renderTop(){
     const ws = (WEEKLY.weeklyTop||[]).slice().reverse().slice(0,3);
     const top3Ids = new Set(ws.map(w=>w.screenshotId));
     const tot = APPROVED.length;
-    const hdr = '<div class="card mb-2" style="border-color:var(--red);border-width:2px;background:linear-gradient(135deg,rgba(224,24,15,.08),#0a0a0a 70%)">'+
+    const hdr = '<div class="card mb-2" style="border-color:var(--red);border-width:2px;background:linear-gradient(135deg,rgba(168,85,247,.1),#0d0815 70%)">'+
       '<div style="display:flex;gap:.9rem;flex-wrap:wrap;align-items:center"><div style="font-size:2.2rem">🏆</div>'+
       '<div style="flex:1;min-width:220px"><div style="font-weight:700;font-family:\'Rajdhani\';font-size:1.15rem">Еженедельный отбор — Топ-3</div>'+
       '<div style="font-size:.83rem;color:var(--tx2);margin-top:.2rem">🥇🥈🥉 — лучшие по баллам (👍−👎). Внизу — 💀 худший скриншот недели.</div>'+
@@ -1599,14 +1636,14 @@ async function renderTop(){
       candidates.sort((a,b)=> (a.likes-a.dislikes) - (b.likes-b.dislikes));
       const w = candidates[0];
       worst = '<div style="margin-top:1.4rem;font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">💀 Худший скриншот</div>'+
-        '<div class="top-e" style="border-color:var(--red);border-width:2px;background:linear-gradient(90deg,rgba(224,24,15,.18),#0a0a0a 70%)">'+
-        '<div class="top-r" style="color:var(--red)">💀</div>'+
-        '<div style="width:90px;height:65px;overflow:hidden;border:1px solid var(--red);border-radius:8px"><img src="'+w.img+'" style="width:100%;height:100%;object-fit:cover;filter:grayscale(.55) brightness(.75)" onclick="openImg(\''+w.img+'\')"></div>'+
-        '<div style="flex:1;min-width:0"><div class="top-w" style="color:var(--red)">Анти-топ</div>'+
+        '<div class="top-e" style="border-color:var(--danger);border-width:2px;background:linear-gradient(90deg,rgba(224,24,15,.18),#0d0815 70%)">'+
+        '<div class="top-r" style="color:var(--danger)">💀</div>'+
+        '<div style="width:90px;height:65px;overflow:hidden;border:1px solid var(--danger);border-radius:8px"><img src="'+w.img+'" style="width:100%;height:100%;object-fit:cover;filter:grayscale(.55) brightness(.75)" onclick="openImg(\''+w.img+'\')"></div>'+
+        '<div style="flex:1;min-width:0"><div class="top-w" style="color:var(--danger)">Анти-топ</div>'+
         '<div style="font-weight:600;font-size:.9rem">'+esc(w.author)+'</div>'+
         '<div style="font-size:.76rem;color:var(--tx2)">'+(w.place?'📍'+esc(w.place)+' ':'')+(w.stock?'🚂'+esc(w.stock):'')+'</div></div>'+
         '<div style="text-align:right"><div style="font-size:.72rem;color:var(--tx3)">👍'+w.likes+'·👎'+w.dislikes+'</div>'+
-        '<div class="top-s" style="color:var(--red)">'+(w.likes-w.dislikes)+' балл</div></div></div>';
+        '<div class="top-s" style="color:var(--danger)">'+(w.likes-w.dislikes)+' балл</div></div></div>';
     }
     el.innerHTML = hdr + winners + worst;
   }catch(e){ toast(e.message,'error'); }
@@ -1636,7 +1673,7 @@ async function renderBoard(){
   }catch(e){ toast(e.message,'error'); }
 }
 function bEntry(e,k){
-  const d = can('editBoard') ? '<button class="btn btn-ghost btn-sm" onclick="delBoard(\''+k+'\','+e.id+')">🗑</button>' : '';
+  const d = can('editBoard') ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="delBoard(\''+k+'\','+e.id+')">🗑</button>' : '';
   return '<div class="b-entry"><div class="b-icon '+(k==='honor'?'h':'s')+'">'+(k==='honor'?'🏅':'☠️')+'</div>'+
     '<div style="flex:1"><div class="b-nick">'+esc(e.nick)+'</div><div class="b-desc">'+esc(e.desc)+'</div>'+
     '<div class="b-date">'+esc(e.date)+'</div></div>'+d+'</div>';
@@ -1692,7 +1729,7 @@ function gdCard(g, n){
     if(m) vid = '<div class="gd-video"><iframe src="https://rutube.ru/play/embed/'+m[1]+'" allowfullscreen></iframe></div>';
   }
   const lk = g.extraLink ? '<a class="gd-link" href="'+esc(g.extraLink)+'" target="_blank">🔗 '+esc(g.extraLink)+'</a>' : '';
-  const adm = canE ? '<div class="gd-admin"><button class="btn btn-ghost btn-sm" onclick="openGuideEditor('+g.id+')">✏️ Изменить</button><button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="delGuide('+g.id+')">🗑 Удалить</button></div>' : '';
+  const adm = canE ? '<div class="gd-admin"><button class="btn btn-ghost btn-sm" onclick="openGuideEditor('+g.id+')">✏️ Изменить</button><button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="delGuide('+g.id+')">🗑 Удалить</button></div>' : '';
   return '<div class="gd"><div class="gd-head" onclick="toggleGuide('+g.id+')"><div class="gd-cover">'+cov+'</div>'+
     '<div class="gd-info"><div class="gd-title"><span class="gd-num">'+String(n).padStart(2,'0')+'.</span>'+esc(g.title)+'</div>'+
     (g.short?'<div class="gd-desc">'+esc(g.short)+'</div>':'')+
@@ -1828,7 +1865,7 @@ async function renderMaps(){
       const el2 = m.extLink ? '<div class="mp-link">🔗 <a href="'+esc(m.extLink)+'" target="_blank" style="color:var(--bl)">'+esc(m.extLink)+'</a></div>' : '';
       const typeBadge = '<span class="badge '+(m.mapType==='Тексельный'?'b-pu':'b-bl')+'">'+(m.mapType||'Реализм')+'</span>';
       const dl = hf ? (can('downloadMaps')?'<button class="btn btn-ghost btn-sm" onclick="dlMap('+m.id+')">⬇ Скачать</button>':'<button class="btn btn-ghost btn-sm" disabled>🔒</button>') : (m.extLink ? '<a class="btn btn-ghost btn-sm" href="'+esc(m.extLink)+'" target="_blank">🔗 Открыть</a>' : '<button class="btn btn-ghost btn-sm" disabled>Нет файла</button>');
-      const db = can('managePacks') ? '<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="rmMap('+m.id+')">🗑</button>' : '';
+      const db = can('managePacks') ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="rmMap('+m.id+')">🗑</button>' : '';
       return '<div class="mp mb-1"><div class="mp-thumb">'+ti+tb+'</div><div class="mp-info"><div class="mp-name">'+esc(m.name)+' '+typeBadge+'</div><div class="mp-desc">'+esc(m.desc||'')+'</div>'+fi+el2+'</div><div class="mp-actions">'+dl+db+'</div></div>';
     }).join('');
   }catch(e){ toast(e.message,'error'); }
@@ -1918,7 +1955,7 @@ async function renderPacks(){
       const lk = p.extLink ? '<div class="pk-link">🔗 <a href="'+esc(p.extLink)+'" target="_blank">'+esc(p.extLink)+'</a></div>' : '';
       const typeBadge = '<span class="badge '+(p.packType==='Тексельный'?'b-pu':'b-bl')+'" style="margin-left:.4rem">'+(p.packType||'Реализм')+'</span>';
       const dl = p.fileDataUrl ? (can('downloadMaps')?'<button class="btn btn-ghost btn-sm" onclick="dlPack('+p.id+')">⬇ Скачать</button>':'<button class="btn btn-ghost btn-sm" disabled>🔒</button>') : (p.extLink ? '<a class="btn btn-ghost btn-sm" href="'+esc(p.extLink)+'" target="_blank">🔗</a>' : '');
-      const db = can('managePacks') ? '<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="rmPack('+p.id+')">🗑</button>' : '';
+      const db = can('managePacks') ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="rmPack('+p.id+')">🗑</button>' : '';
       return '<div class="pk"><div class="pk-cover">'+cov+'</div><div class="pk-body"><div class="pk-name">'+esc(p.name)+typeBadge+'</div>'+(p.desc?'<div class="pk-desc">'+esc(p.desc)+'</div>':'')+fi+lk+'<div class="pk-file">👤 '+esc(p.author||'—')+'</div><div class="pk-actions">'+dl+db+'</div></div></div>';
     }).join('');
   }catch(e){ toast(e.message,'error'); }
@@ -1973,7 +2010,7 @@ async function forumSections(root){
           const t = await api('/api/forum/topics?sectionId='+s.id);
           const ts = t.topics;
           const totalMsgs = ts.reduce((a,x)=>a+x.posts.length,0);
-          arr.push('<div class="f-sec" onclick="openForumSection('+s.id+')"><div class="f-sec-ico">'+em(s.icon)+'</div><div class="f-sec-info"><div class="f-sec-name">'+esc(s.name)+'</div><div class="f-sec-desc">'+esc(s.desc||'')+'</div></div><div class="f-sec-stat"><div>🧵 <b>'+ts.length+'</b></div><div>💬 <b>'+totalMsgs+'</b></div></div>'+(canAdmin()?'<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();delSection('+s.id+')">🗑</button>':'')+'</div>');
+          arr.push('<div class="f-sec" onclick="openForumSection('+s.id+')"><div class="f-sec-ico">'+em(s.icon)+'</div><div class="f-sec-info"><div class="f-sec-name">'+esc(s.name)+'</div><div class="f-sec-desc">'+esc(s.desc||'')+'</div></div><div class="f-sec-stat"><div>🧵 <b>'+ts.length+'</b></div><div>💬 <b>'+totalMsgs+'</b></div></div>'+(canAdmin()?'<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="event.stopPropagation();delSection('+s.id+')">🗑</button>':'')+'</div>');
         }catch(e){}
       }
       inner = arr.join('');
@@ -2093,7 +2130,7 @@ function renderRecruitManage(root){
   const apps = RECRUIT.applications;
   const formsHtml = forms.length ? forms.map(f=>{
     const cnt = apps.filter(a=>a.formId===f.id).length;
-    return '<div class="rc-form"><div class="rc-form-cover">'+(f.cover?'<img src="'+esc(f.cover)+'">':'📝')+'</div><div class="rc-form-info"><div class="rc-form-title">'+esc(f.name)+'</div><div class="rc-form-meta"><span>❓ '+f.questions.length+'</span><span>📥 '+cnt+'</span><span>'+(f.open?'✅ Открыта':'🔒 Закрыта')+'</span></div></div><div class="rc-form-actions"><button class="btn btn-ghost btn-sm" onclick="openFormEditor('+f.id+')">✏️</button><button class="btn btn-ghost btn-sm" onclick="toggleFormOpen('+f.id+')">'+(f.open?'🔒':'🔓')+'</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delForm('+f.id+')">🗑</button></div></div>';
+    return '<div class="rc-form"><div class="rc-form-cover">'+(f.cover?'<img src="'+esc(f.cover)+'">':'📝')+'</div><div class="rc-form-info"><div class="rc-form-title">'+esc(f.name)+'</div><div class="rc-form-meta"><span>❓ '+f.questions.length+'</span><span>📥 '+cnt+'</span><span>'+(f.open?'✅ Открыта':'🔒 Закрыта')+'</span></div></div><div class="rc-form-actions"><button class="btn btn-ghost btn-sm" onclick="openFormEditor('+f.id+')">✏️</button><button class="btn btn-ghost btn-sm" onclick="toggleFormOpen('+f.id+')">'+(f.open?'🔒':'🔓')+'</button><button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="delForm('+f.id+')">🗑</button></div></div>';
   }).join('') : '<div style="color:var(--tx2);font-size:.85rem">Анкет нет.</div>';
   const appsHtml = apps.length ? apps.map(a=>renderAppCard(a)).join('') : '<div style="color:var(--tx2);font-size:.85rem">Заявок нет.</div>';
   root.innerHTML = '<div class="page-header"><div class="page-title">Управление <span>набором</span></div><div class="red-bar"></div><button class="btn btn-ghost mt-1" onclick="toggleManage()">← Выйти</button></div>'+ (isOwner()?'<div class="card mb-2" style="background:#1a1000;border-color:#3a2000;display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><div style="flex:1"><div style="font-weight:700">Видимость «Набор»</div><div style="font-size:.82rem;color:var(--tx2)">Закрыто — видно только Владельцу</div></div><button class="btn '+(RECRUIT.enabled?'btn-red':'btn-gr')+'" onclick="toggleRecruitVisibility()">'+(RECRUIT.enabled?'🔒 Закрыть':'🔓 Открыть')+'</button></div>':'') + '<div class="as"><div class="as-t">Анкеты</div><button class="btn btn-red mb-2" onclick="openFormEditor()">+ Создать</button>'+formsHtml+'</div><div class="as"><div class="as-t">Заявки ('+apps.length+')</div>'+appsHtml+'</div>';
@@ -2101,7 +2138,7 @@ function renderRecruitManage(root){
 function renderAppCard(a){
   const f = RECRUIT.forms.find(x=>x.id===a.formId);
   const cls = {'На рассмотрении':'b-gr2','В работе':'b-ye','Отклонена':'b-red','Пройдена':'b-gr'}[a.status] || 'b-gr2';
-  return '<div class="rc-app"><div class="rc-app-h"><span class="badge '+cls+'">'+esc(a.status)+'</span><b>'+esc(a.userName)+'</b><span style="color:var(--tx3);font-size:.78rem">на «'+esc(f?f.name:'—')+'»</span></div>'+ (can('supportReply')?'<div class="rc-app-actions"><button class="btn btn-ghost btn-sm" onclick="setAppStatus('+a.id+',\'На рассмотрении\')">⏳</button><button class="btn btn-ghost btn-sm" style="color:var(--ye)" onclick="setAppStatus('+a.id+',\'В работе\')">🛠</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="setAppStatus('+a.id+',\'Отклонена\')">❌</button><button class="btn btn-gr btn-sm" onclick="setAppStatus('+a.id+',\'Пройдена\')">✅</button></div>':'') + '</div>';
+  return '<div class="rc-app"><div class="rc-app-h"><span class="badge '+cls+'">'+esc(a.status)+'</span><b>'+esc(a.userName)+'</b><span style="color:var(--tx3);font-size:.78rem">на «'+esc(f?f.name:'—')+'»</span></div>'+ (can('supportReply')?'<div class="rc-app-actions"><button class="btn btn-ghost btn-sm" onclick="setAppStatus('+a.id+',\'На рассмотрении\')">⏳</button><button class="btn btn-ghost btn-sm" style="color:var(--ye)" onclick="setAppStatus('+a.id+',\'В работе\')">🛠</button><button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="setAppStatus('+a.id+',\'Отклонена\')">❌</button><button class="btn btn-gr btn-sm" onclick="setAppStatus('+a.id+',\'Пройдена\')">✅</button></div>':'') + '</div>';
 }
 async function toggleRecruitVisibility(){
   try{ await api('/api/recruit/toggle', { method:'POST' }); renderRecruit(); }
@@ -2127,7 +2164,7 @@ function openFormEditor(id){
 function renderQEditor(){
   const el = document.getElementById('rf-questions'); if(!el) return;
   if(!rfQuestions.length){ el.innerHTML = '<div style="color:var(--tx3);font-size:.82rem">Вопросов нет.</div>'; return; }
-  el.innerHTML = rfQuestions.map((q,i)=>'<div class="rc-q"><div class="rc-q-h"><div class="rc-q-num">'+(i+1)+'</div><input class="field" style="margin:0;flex:1" value="'+esc(q.label)+'" oninput="updQ('+q.id+',\'label\',this.value)" placeholder="Вопрос"><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="rmQ('+q.id+')">🗑</button></div><div class="field-label">Тип ответа</div><select class="field" style="margin:0" onchange="updQ('+q.id+',\'type\',this.value)"><option value="text" '+(q.type==='text'?'selected':'')+'>Короткий текст</option><option value="textarea" '+(q.type==='textarea'?'selected':'')+'>Длинный текст</option><option value="number" '+(q.type==='number'?'selected':'')+'>Число</option></select><label class="tg-row" style="cursor:pointer"><span class="tg-lbl">Обязательный</span><input type="checkbox" '+(q.required?'checked':'')+' onchange="updQ('+q.id+',\'required\',this.checked)"></label></div>').join('');
+  el.innerHTML = rfQuestions.map((q,i)=>'<div class="rc-q"><div class="rc-q-h"><div class="rc-q-num">'+(i+1)+'</div><input class="field" style="margin:0;flex:1" value="'+esc(q.label)+'" oninput="updQ('+q.id+',\'label\',this.value)" placeholder="Вопрос"><button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="rmQ('+q.id+')">🗑</button></div><div class="field-label">Тип ответа</div><select class="field" style="margin:0" onchange="updQ('+q.id+',\'type\',this.value)"><option value="text" '+(q.type==='text'?'selected':'')+'>Короткий текст</option><option value="textarea" '+(q.type==='textarea'?'selected':'')+'>Длинный текст</option><option value="number" '+(q.type==='number'?'selected':'')+'>Число</option></select><label class="tg-row" style="cursor:pointer"><span class="tg-lbl">Обязательный</span><input type="checkbox" '+(q.required?'checked':'')+' onchange="updQ('+q.id+',\'required\',this.checked)"></label></div>').join('');
 }
 function addQEditor(){ rfQuestions.push({ id:Date.now()+Math.floor(Math.random()*1000), label:'', type:'text', required:false }); renderQEditor(); }
 function updQ(id, k, v){ const q = rfQuestions.find(x=>x.id===id); if(q) q[k] = v; }
@@ -2158,7 +2195,7 @@ function openApply(formId){
   if(RECRUIT.applications.find(a=>a.formId===formId)) return toast('Вы уже заполняли','error');
   currentApplying = formId;
   document.getElementById('ap-title').innerHTML = esc(f.name) + ' <span class="modal-x" onclick="closeModal(\'m-apply\')">✕</span>';
-  document.getElementById('ap-body').innerHTML = (f.desc?'<div style="font-size:.85rem;color:var(--tx2);margin-bottom:1rem">'+esc(f.desc)+'</div>':'') + f.questions.map((q,i)=>'<div style="margin-bottom:1.1rem"><div class="field-label">'+(i+1)+'. '+esc(q.label)+' '+(q.required?'<span style="color:var(--red)">*</span>':'')+'</div>'+(q.type==='textarea'?'<textarea class="field" id="ans-'+q.id+'" rows="3"></textarea>':'<input class="field" id="ans-'+q.id+'" type="'+(q.type==='number'?'number':'text')+'">')+'</div>').join('') + '<button class="btn btn-red btn-full" onclick="submitApply()">📤 Отправить</button>';
+  document.getElementById('ap-body').innerHTML = (f.desc?'<div style="font-size:.85rem;color:var(--tx2);margin-bottom:1rem">'+esc(f.desc)+'</div>':'') + f.questions.map((q,i)=>'<div style="margin-bottom:1.1rem"><div class="field-label">'+(i+1)+'. '+esc(q.label)+' '+(q.required?'<span style="color:var(--danger)">*</span>':'')+'</div>'+(q.type==='textarea'?'<textarea class="field" id="ans-'+q.id+'" rows="3"></textarea>':'<input class="field" id="ans-'+q.id+'" type="'+(q.type==='number'?'number':'text')+'">')+'</div>').join('') + '<button class="btn btn-red btn-full" onclick="submitApply()">📤 Отправить</button>';
   openModal('m-apply');
 }
 async function submitApply(){
@@ -2223,7 +2260,7 @@ function renderAgentTickets(kind){
   el.innerHTML = list.map(t=>tkCard(t,true)).join('');
 }
 function tkCard(t, agent){
-  return '<div class="tk '+(TICKET_CLS[t.status]||'')+'"><div class="tk-h"><span class="badge '+(TICKET_BADGE[t.status]||'b-gr2')+'">'+esc(t.status)+'</span><span class="tk-cat">'+(t.kind==='mapdev'?'🗺️':'🎧')+' '+esc(t.category)+'</span><span class="tk-title">#'+t.id+' · '+esc(t.subject)+'</span>'+(agent?'<span style="font-size:.72rem;color:var(--tx3)">👤 '+esc(t.userName)+'</span>':'')+'</div><div class="tk-desc">'+esc((t.description||'').substring(0,180))+(t.description.length>180?'…':'')+'</div>'+(t.files&&t.files.length?'<div class="tk-attach">'+t.files.map(f=>'<img src="'+f+'" onclick="openImg(\''+f+'\')">').join('')+'</div>':'')+'<div class="tk-meta"><span>📅 '+new Date(t.created).toLocaleString('ru')+'</span><span>💬 '+t.messages.length+'</span>'+(t.agentName?'<span>🛠 '+esc(t.agentName)+'</span>':'')+'</div><div class="tk-actions"><button class="btn btn-red btn-sm" onclick="openTicket('+t.id+')">💬 Открыть</button>'+(isOwnerOrMod(t)?'<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="deleteTicket('+t.id+')">🗑</button>':'')+'</div></div>';
+  return '<div class="tk '+(TICKET_CLS[t.status]||'')+'"><div class="tk-h"><span class="badge '+(TICKET_BADGE[t.status]||'b-gr2')+'">'+esc(t.status)+'</span><span class="tk-cat">'+(t.kind==='mapdev'?'🗺️':'🎧')+' '+esc(t.category)+'</span><span class="tk-title">#'+t.id+' · '+esc(t.subject)+'</span>'+(agent?'<span style="font-size:.72rem;color:var(--tx3)">👤 '+esc(t.userName)+'</span>':'')+'</div><div class="tk-desc">'+esc((t.description||'').substring(0,180))+(t.description.length>180?'…':'')+'</div>'+(t.files&&t.files.length?'<div class="tk-attach">'+t.files.map(f=>'<img src="'+f+'" onclick="openImg(\''+f+'\')">').join('')+'</div>':'')+'<div class="tk-meta"><span>📅 '+new Date(t.created).toLocaleString('ru')+'</span><span>💬 '+t.messages.length+'</span>'+(t.agentName?'<span>🛠 '+esc(t.agentName)+'</span>':'')+'</div><div class="tk-actions"><button class="btn btn-red btn-sm" onclick="openTicket('+t.id+')">💬 Открыть</button>'+(isOwnerOrMod(t)?'<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="deleteTicket('+t.id+')">🗑</button>':'')+'</div></div>';
 }
 function isOwnerOrMod(t){
   if(!ME) return false;
@@ -2261,7 +2298,7 @@ async function openTicket(id){
     if(isAgent) sb.innerHTML = TICKET_ST.map(s=>'<button class="btn '+(s===t.status?'btn-red':'btn-ghost')+' btn-sm" onclick="setTicketStatus('+t.id+',\''+s+'\')">'+s+'</button>').join('');
     else sb.innerHTML = '';
     if(isOwnerOrMod(t)){
-      sb.innerHTML += '<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000;margin-left:auto" onclick="deleteTicket('+t.id+')">🗑 Удалить</button>';
+      sb.innerHTML += '<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000;margin-left:auto" onclick="deleteTicket('+t.id+')">🗑 Удалить</button>';
     }
     renderTicketMsgs(t);
     openModal('m-ticket');
@@ -2366,7 +2403,7 @@ function renderTkFilesPrev(kind){
   const arr = ticketFilesBuf[kind];
   if(!arr.length){ el.classList.add('hidden'); el.innerHTML = ''; return; }
   el.classList.remove('hidden');
-  el.innerHTML = arr.map((f,i)=>'<div style="position:relative"><img src="'+f.data+'" style="width:70px;height:70px;object-fit:cover;border:1px solid var(--bd2);border-radius:8px"><button class="btn btn-ghost btn-sm" style="position:absolute;top:-8px;right:-8px;padding:0 6px;color:var(--red);border-color:#3a0000;background:#000;border-radius:50%" onclick="rmTkFile(\''+kind+'\','+i+')">✕</button></div>').join('');
+  el.innerHTML = arr.map((f,i)=>'<div style="position:relative"><img src="'+f.data+'" style="width:70px;height:70px;object-fit:cover;border:1px solid var(--bd2);border-radius:8px"><button class="btn btn-ghost btn-sm" style="position:absolute;top:-8px;right:-8px;padding:0 6px;color:var(--danger);border-color:#3a0000;background:#000;border-radius:50%" onclick="rmTkFile(\''+kind+'\','+i+')">✕</button></div>').join('');
 }
 function rmTkFile(kind, i){ ticketFilesBuf[kind].splice(i,1); renderTkFilesPrev(kind); }
 
@@ -2429,7 +2466,7 @@ async function renderMyTicketsTab(){
       h += '</div>';
       return h;
     }).join('');
-  }catch(e){ el.innerHTML = '<div style="color:var(--red);font-size:.85rem">Ошибка: '+esc(e.message)+'</div>'; }
+  }catch(e){ el.innerHTML = '<div style="color:var(--danger);font-size:.85rem">Ошибка: '+esc(e.message)+'</div>'; }
 }
 async function renderMyShotsTab(){
   const el = document.getElementById('pc-shots-list'); if(!el) return;
@@ -2453,7 +2490,7 @@ async function renderMyShotsTab(){
       h += '</div></div>';
       return h;
     }).join('');
-  }catch(e){ el.innerHTML = '<div style="color:var(--red);font-size:.85rem">Ошибка: '+esc(e.message)+'</div>'; }
+  }catch(e){ el.innerHTML = '<div style="color:var(--danger);font-size:.85rem">Ошибка: '+esc(e.message)+'</div>'; }
 }
 async function renderMyPunishTab(){
   const el = document.getElementById('pc-punish-list'); if(!el) return;
@@ -2462,7 +2499,7 @@ async function renderMyPunishTab(){
     const d = await api('/api/me/punishments');
     if(!d.punishments.length){ el.innerHTML = '<div style="color:var(--tx2);font-size:.85rem">У вас нет наказаний. 👍</div>'; return; }
     el.innerHTML = d.punishments.map(p => punishCard(p, false)).join('');
-  }catch(e){ el.innerHTML = '<div style="color:var(--red);font-size:.85rem">Ошибка: '+esc(e.message)+'</div>'; }
+  }catch(e){ el.innerHTML = '<div style="color:var(--danger);font-size:.85rem">Ошибка: '+esc(e.message)+'</div>'; }
 }
 function onPfAvatar(inp){
   const f = inp.files[0]; if(!f) return;
@@ -2525,7 +2562,7 @@ function punishCard(p, showActions){
   h += '<div class="pun-meta"><span>📅 С '+from+'</span><span>📅 По '+to+'</span><span>👮 '+esc(p.createdBy||'—')+'</span>'+(p.source?'<span>📡 '+esc(p.source)+'</span>':'')+'</div>';
   h += '<div class="pun-reason"><b>📝 Причина:</b> '+esc(p.reason)+'</div>';
   if(showActions && p.active && p.toDate > Date.now()){
-    h += '<div class="tk-actions"><button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="removePunishment('+p.id+')">♻️ Снять наказание</button></div>';
+    h += '<div class="tk-actions"><button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="removePunishment('+p.id+')">♻️ Снять наказание</button></div>';
   }
   h += '</div>';
   return h;
@@ -2595,7 +2632,7 @@ async function renderAdmin(){
     SHOTS = s.shots;
     const pending = SHOTS.filter(x=>x.status==='pending');
     document.getElementById('admin-ss').innerHTML = pending.length
-      ? pending.map(x=>'<div class="card mb-1" style="display:flex;gap:.9rem;align-items:center;flex-wrap:wrap;padding:.9rem"><img src="'+x.img+'" style="width:90px;height:65px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openImg(\''+x.img+'\')"><div style="flex:1;min-width:140px"><b>'+esc(x.author)+'</b><div style="font-size:.75rem;color:var(--tx3);margin-top:.2rem">📍 '+esc(x.place||'—')+' · 🚂 '+esc(x.stock||'—')+'</div></div><button class="btn btn-gr btn-sm" onclick="approveSS('+x.id+')">✅</button><button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="rejectSS('+x.id+')">❌</button></div>').join('')
+      ? pending.map(x=>'<div class="card mb-1" style="display:flex;gap:.9rem;align-items:center;flex-wrap:wrap;padding:.9rem"><img src="'+x.img+'" style="width:90px;height:65px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openImg(\''+x.img+'\')"><div style="flex:1;min-width:140px"><b>'+esc(x.author)+'</b><div style="font-size:.75rem;color:var(--tx3);margin-top:.2rem">📍 '+esc(x.place||'—')+' · 🚂 '+esc(x.stock||'—')+'</div></div><button class="btn btn-gr btn-sm" onclick="approveSS('+x.id+')">✅</button><button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="rejectSS('+x.id+')">❌</button></div>').join('')
       : '<div style="color:var(--tx2);font-size:.83rem">Нет на проверке.</div>';
     document.getElementById('last-week').textContent = WEEKLY.lastPinnedWeek || 'ещё не было';
   }catch(e){ toast(e.message,'error'); }
@@ -2605,7 +2642,7 @@ function userCard(u){
   const isSelf = u.id===ME.id;
   const canEdit = isOwner() || (canAdmin() && u.role!=='owner' && !isSelf);
   const opts = ROLES.map(ro=>'<option value="'+ro.id+'" '+(u.role===ro.id?'selected':'')+'>'+esc(ro.name)+'</option>').join('');
-  const del = (isOwner() && !isSelf && u.role!=='owner') ? '<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:#3a0000" onclick="delUser(\''+u.id+'\')">🗑</button>' : '';
+  const del = (isOwner() && !isSelf && u.role!=='owner') ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:#3a0000" onclick="delUser(\''+u.id+'\')">🗑</button>' : '';
   return '<div class="uc"><div class="uc-h"><div class="av" style="width:32px;height:32px;font-size:.8rem;background:'+r.color+'">'+(u.nickname||'?')[0].toUpperCase()+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.88rem">'+esc(u.nickname||u.login)+' '+(isSelf?'<span style="color:var(--tx3);font-weight:400">(вы)</span>':'')+'</div><div style="font-size:.72rem;color:'+r.color+'">'+esc(r.name)+' · '+esc(u.email)+'</div></div>'+(canEdit?'<select class="field" style="padding:.3rem .5rem;margin:0;font-size:.8rem;width:auto" onchange="changeRole(\''+u.id+'\',this.value)">'+opts+'</select>':'')+del+'</div></div>';
 }
 async function changeRole(uid, role){
@@ -2642,7 +2679,7 @@ async function submitRole(){
   }
 })();
 
-/* Экспорт функций в window */
+/* Экспорт функций в window для inline-обработчиков */
 Object.assign(window, {
   switchAuth, doLogin, startReg, doLogout, askNickname,
   switchProfileTab, filterMaps, filterPacks, filterPun,

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================
-// MFMIR V2 — сервер с защитой от падений, 2FA, Gmail, Telegram
+// MFMIR V2 — сервер с защитой от падений, простым входом, Gmail, Telegram
 // Node.js 18+. Без внешних зависимостей.
 // ============================================================
 
@@ -110,7 +110,7 @@ async function tgCall(method, body){
 
 const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-/* ============ GMAIL ============ */
+/* ============ GMAIL (оставлен для возможной отправки уведомлений) ============ */
 let gmailCache = { token:null, exp:0 };
 async function getGmailToken(){
   if(gmailCache.token && gmailCache.exp > Date.now()+60000) return gmailCache.token;
@@ -197,7 +197,6 @@ function seedDB(){
   console.log('👑 Владелец:', owner.login);
   return db;
 }
-/* Автопатч для старых БД */
 if(!DB.punishments) DB.punishments = [];
 if(!DB.punishSeq) DB.punishSeq = 1;
 if(!DB.topics) DB.topics = {};
@@ -266,7 +265,7 @@ function requirePerm(u, perm){ if(!u) return {code:401,error:'Нет автор�
 const publicUser = u => ({id:u.id,email:u.email,login:u.login,nickname:u.nickname,role:u.role,roleName:u.roleName,avatar:u.avatar||null,isTemporary:!!u.isTemporary,permOverrides:u.permOverrides||null});
 const publicScreenshot = (s,uid) => ({id:s.id,author:s.author,img:s.img,place:s.place,stock:s.stock,status:s.status,approvedAt:s.approvedAt,date:s.date,likes:s.likes.length,dislikes:s.dislikes.length,likedByMe:s.likes.includes(uid),dislikedByMe:s.dislikes.includes(uid),comments:s.comments,rejectReason:s.rejectReason||null});
 
-/* ============ ТОПИКИ ============ */
+/* ============ ТОПИКИ — с 4 отдельными для наказаний ============ */
 const TOPIC_TEMPLATES = [
   { key: 'server',       name: '🖥 Сервер' },
   { key: 'support',      name: '📩 Поддержка' },
@@ -277,7 +276,10 @@ const TOPIC_TEMPLATES = [
   { key: 'screenshots',  name: '📸 Скриншоты' },
   { key: 'tickets',      name: '🎫 Тикеты' },
   { key: 'moderation',   name: '⚙️ Модерация' },
-  { key: 'punishments',  name: '⚖️ Наказания' }
+  { key: 'punish_bans',  name: '🔨 Баны' },
+  { key: 'punish_mutes', name: '🔇 Муты' },
+  { key: 'punish_kicks', name: '👢 Кики' },
+  { key: 'punish_warns', name: '⚠️ Варны' }
 ];
 
 async function setupTopics(){
@@ -338,7 +340,10 @@ const audit = {
   screenshot: (text) => tgAudit('screenshots', `📸 <b>Скриншот</b>\n\n${text}`),
   ticket: (text) => tgAudit('tickets', `🎫 <b>Тикет</b>\n\n${text}`),
   moderation: (text) => tgAudit('moderation', `⚙️ <b>Модерация</b>\n\n${text}`),
-  punishment: (text) => tgAudit('punishments', `${text}`)
+  punishment: (text, type) => {
+    const topicKey = { ban:'punish_bans', mute:'punish_mutes', kick:'punish_kicks', warn:'punish_warns' }[type] || 'punish_bans';
+    return tgAudit(topicKey, `${text}`);
+  }
 };
 
 /* ============ НАКАЗАНИЯ ============ */
@@ -406,7 +411,7 @@ async function handleTgCommand(text, msg){
 
   const type = cmdMap[cmd];
   if(rest.length < 2){
-    await tgAudit('punishments',
+    await tgAudit('punish_bans',
       `❌ <b>Ошибка команды</b>\n` +
       `Формат: <code>/${cmd} @username СРОК причина</code>\n` +
       `Пример: <code>/${cmd} @ivan 7d читает</code>\n` +
@@ -421,7 +426,7 @@ async function handleTgCommand(text, msg){
   } else {
     const dur = parseDuration(rest[1]);
     if(!dur){
-      await tgAudit('punishments', `❌ <b>Неверный срок</b>: <code>${escapeHtml(rest[1])}</code>`);
+      await tgAudit('punish_bans', `❌ <b>Неверный срок</b>: <code>${escapeHtml(rest[1])}</code>`);
       return true;
     }
     duration = dur;
@@ -436,14 +441,15 @@ async function handleTgCommand(text, msg){
   };
   DB.punishments.push(p);
   saveDB();
-  await tgAudit('punishments', `✅ <b>Наказание выдано</b>\n\n` + fmtPunish(p));
+  const topicKey = { ban:'punish_bans', mute:'punish_mutes', kick:'punish_kicks', warn:'punish_warns' }[type] || 'punish_bans';
+  await tgAudit(topicKey, `✅ <b>Наказание выдано</b>\n\n` + fmtPunish(p));
   return true;
 }
 
 async function handleUnpunish(args){
   const userName = (args[0]||'').replace('@','');
   if(!userName){
-    await tgAudit('punishments', `❌ Укажи пользователя: <code>/снять @username</code>`);
+    await tgAudit('punish_bans', `❌ Укажи пользователя: <code>/снять @username</code>`);
     return true;
   }
   let count = 0;
@@ -455,14 +461,14 @@ async function handleUnpunish(args){
   });
   saveDB();
   if(count === 0){
-    await tgAudit('punishments', `⚠️ У <b>${escapeHtml(userName)}</b> нет активных наказаний`);
+    await tgAudit('punish_bans', `⚠️ У <b>${escapeHtml(userName)}</b> нет активных наказаний`);
   } else {
-    await tgAudit('punishments', `✅ Снято <b>${count}</b> наказаний с <b>${escapeHtml(userName)}</b>`);
+    await tgAudit('punish_bans', `✅ Снято <b>${count}</b> наказаний с <b>${escapeHtml(userName)}</b>`);
   }
   return true;
 }
 
-/* ============ TELEGRAM POLLING (защищённый) ============ */
+/* ============ TELEGRAM POLLING ============ */
 let tgPolling = false;
 async function tgPollLoop(){
   if(tgPolling) return;
@@ -515,7 +521,7 @@ async function handleApi(req, res, pathname){
   const url = new URL(req.url, BASE_URL);
   const q = Object.fromEntries(url.searchParams);
 
-  /* ---------- AUTH: РЕГИСТРАЦИЯ (шаг 1) ---------- */
+  /* ---------- AUTH: РЕГИСТРАЦИЯ (простая, без кода) ---------- */
   if(m==='POST' && pathname==='/api/auth/register'){
     const {email, password} = await readBody(req);
     if(!email || !password) return json(res,400,{error:'Введите email и пароль'});
@@ -523,55 +529,27 @@ async function handleApi(req, res, pathname){
     if(String(password).length<6) return json(res,400,{error:'Пароль минимум 6 символов'});
     const em = email.toLowerCase().trim();
     if(findByEmail(em)) return json(res,409,{error:'Этот email уже зарегистрирован'});
-    DB.tokens = DB.tokens.filter(t => t.expiresAt > Date.now());
-    const code = String(Math.floor(100000+Math.random()*900000));
-    DB.tokens.push({
-      id: crypto.randomUUID(), type: 'reg_code', code, email: em,
-      passwordHash: hashPassword(password),
-      expiresAt: Date.now() + 15*60*1000, used: false
-    });
-    saveDB();
-    let devCode;
-    try{
-      await sendMail({
-        to: em,
-        subject: 'MFMIR — код подтверждения регистрации',
-        html: `<div style="font-family:Arial;background:#000;color:#fff;padding:32px;border-radius:12px;max-width:520px">
-          <h1 style="letter-spacing:4px;margin:0 0 8px">MF<span style="color:#e0180f">MIR</span></h1>
-          <p style="color:#aaa">Код подтверждения регистрации:</p>
-          <div style="font-size:38px;font-weight:900;letter-spacing:8px;padding:14px;background:#111;text-align:center;border-radius:8px;color:#e0180f">${code}</div>
-          <p style="color:#888;font-size:13px;margin-top:16px">Код действует 15 минут.</p>
-        </div>`
-      });
-    }catch(e){ devCode = code; }
-    audit.registration(`Email: <code>${escapeHtml(em)}</code>\n📧 Код отправлен`);
-    return json(res,200,{ ok:true, needCode:true, email: em, message:'Код отправлен на '+em, devCode });
-  }
 
-  /* ---------- AUTH: РЕГИСТРАЦИЯ (шаг 2) ---------- */
-  if(m==='POST' && pathname==='/api/auth/confirm-register'){
-    const {email, code} = await readBody(req);
-    const em = String(email||'').toLowerCase();
-    const tok = DB.tokens.find(t => t.type === 'reg_code' && !t.used && t.email === em && t.code === String(code||''));
-    if(!tok || tok.expiresAt < Date.now()) return json(res,400,{error:'Неверный или просроченный код'});
-    if(findByEmail(em)) return json(res,409,{error:'Email уже зарегистрирован'});
     const login = em.split('@')[0] + '_' + Math.floor(Math.random()*9000+1000);
     const user = {
       id: crypto.randomUUID(), email: em, login,
       nickname: em.split('@')[0],
-      passwordHash: tok.passwordHash,
+      passwordHash: hashPassword(password),
       role:'user', roleName:'Пользователь',
       emailVerified: true, isTemporary: true,
       avatar: null, permOverrides: null, createdAt: Date.now()
     };
     DB.users.push(user);
-    tok.used = true;
     saveDB();
-    audit.registration(`✅ Подтверждён: <b>${escapeHtml(user.email)}</b>`);
-    return json(res,200,{ok:true, token: signJWT({id:user.id, role:user.role}), user: publicUser(user)});
+    audit.registration(`Email: <code>${escapeHtml(user.email)}</code>`);
+    return json(res,200,{
+      ok:true,
+      token: signJWT({id:user.id, role:user.role}),
+      user: publicUser(user)
+    });
   }
 
-  /* ---------- AUTH: ВХОД (шаг 1) ---------- */
+  /* ---------- AUTH: ВХОД (простой, без кода) ---------- */
   if(m==='POST' && pathname==='/api/auth/login'){
     const {identifier, password} = await readBody(req);
     const u = findByEmail(identifier) || findByLogin(identifier);
@@ -586,78 +564,11 @@ async function handleApi(req, res, pathname){
       const until = new Date(ban.toDate).toLocaleDateString('ru-RU');
       return json(res,403,{error:`Вы забанены до ${until}. Причина: ${ban.reason}`});
     }
-    if(!u.email) return json(res,400,{error:'У пользователя нет email'});
-    DB.tokens = DB.tokens.filter(t => t.expiresAt > Date.now());
-    const code = String(Math.floor(100000+Math.random()*900000));
-    DB.tokens.push({
-      id: crypto.randomUUID(), type: 'login_code', code,
-      userId: u.id, email: u.email,
-      expiresAt: Date.now() + 15*60*1000, used: false
+    audit.login(`✅ Вход: <b>${escapeHtml(u.nickname||u.login)}</b>`);
+    return json(res,200,{
+      token: signJWT({id:u.id, role:u.role}),
+      user: publicUser(u)
     });
-    saveDB();
-    let devCode;
-    try{
-      await sendMail({
-        to: u.email,
-        subject: 'MFMIR — код для входа',
-        html: `<div style="font-family:Arial;background:#000;color:#fff;padding:32px;border-radius:12px;max-width:520px">
-          <h1 style="letter-spacing:4px;margin:0 0 8px">MF<span style="color:#e0180f">MIR</span></h1>
-          <p style="color:#aaa">Код для входа:</p>
-          <div style="font-size:38px;font-weight:900;letter-spacing:8px;padding:14px;background:#111;text-align:center;border-radius:8px;color:#e0180f">${code}</div>
-          <p style="color:#888;font-size:13px;margin-top:16px">Код действует 15 минут.</p>
-        </div>`
-      });
-    }catch(e){ devCode = code; }
-    audit.login(`🔑 Запрос кода входа\n👤 ${escapeHtml(u.nickname||u.login)}\n📧 ${escapeHtml(u.email)}`);
-    return json(res,200,{ ok:true, needCode:true, email: u.email, message:'Код отправлен на '+u.email, devCode });
-  }
-
-  /* ---------- AUTH: ВХОД (шаг 2) ---------- */
-  if(m==='POST' && pathname==='/api/auth/confirm-login'){
-    const {email, code} = await readBody(req);
-    const em = String(email||'').toLowerCase();
-    const tok = DB.tokens.find(t => t.type === 'login_code' && !t.used && t.email === em && t.code === String(code||''));
-    if(!tok || tok.expiresAt < Date.now()) return json(res,400,{error:'Неверный или просроченный код'});
-    const u = findUser(tok.userId);
-    if(!u) return json(res,404,{error:'Пользователь не найден'});
-    tok.used = true;
-    saveDB();
-    audit.login(`✅ Вход подтверждён: <b>${escapeHtml(u.nickname||u.login)}</b>`);
-    return json(res,200,{ok:true, token: signJWT({id:u.id, role:u.role}), user: publicUser(u)});
-  }
-
-  /* ---------- AUTH: RESEND ---------- */
-  if(m==='POST' && pathname==='/api/auth/resend'){
-    const {email, type} = await readBody(req);
-    const e = String(email||'').toLowerCase();
-    const tt = type === 'register' ? 'reg_code' : 'login_code';
-    if(tt === 'reg_code'){
-      const tok = DB.tokens.find(t => t.type==='reg_code' && !t.used && t.email===e);
-      if(!tok) return json(res,404,{error:'Сессия регистрации истекла'});
-      const code = String(Math.floor(100000+Math.random()*900000));
-      tok.code = code; tok.expiresAt = Date.now() + 15*60*1000; saveDB();
-      let devCode;
-      try{
-        await sendMail({to: e, subject:'MFMIR — код подтверждения',
-          html:`<div style="font-family:Arial;background:#000;color:#fff;padding:32px;border-radius:12px"><h1>MFMIR</h1><div style="font-size:38px;font-weight:900;letter-spacing:8px;padding:14px;background:#111;text-align:center;border-radius:8px;color:#e0180f">${code}</div></div>`});
-      }catch(err){ devCode = code; }
-      return json(res,200,{ok:true, message:'Код отправлен', devCode});
-    }
-    if(tt === 'login_code'){
-      const u = findByEmail(e);
-      if(!u) return json(res,404,{error:'Пользователь не найден'});
-      const code = String(Math.floor(100000+Math.random()*900000));
-      DB.tokens = DB.tokens.filter(t => !(t.type==='login_code' && !t.used && t.email===e));
-      DB.tokens.push({id: crypto.randomUUID(), type:'login_code', code, userId:u.id, email:u.email, expiresAt: Date.now()+15*60*1000, used:false});
-      saveDB();
-      let devCode;
-      try{
-        await sendMail({to: e, subject:'MFMIR — код для входа',
-          html:`<div style="font-family:Arial;background:#000;color:#fff;padding:32px;border-radius:12px"><h1>MFMIR</h1><div style="font-size:38px;font-weight:900;letter-spacing:8px;padding:14px;background:#111;text-align:center;border-radius:8px;color:#e0180f">${code}</div></div>`});
-      }catch(err){ devCode = code; }
-      return json(res,200,{ok:true, message:'Код отправлен', devCode});
-    }
-    return json(res,400,{error:'Неизвестный тип'});
   }
 
   /* ---------- AUTH: ME / PROFILE / PASS ---------- */
@@ -787,10 +698,10 @@ async function handleApi(req, res, pathname){
     if(toDate) to = Number(toDate);
     else {
       const dur = parseDuration(duration);
-      if(!dur) return json(res,400,{error:'Неверный срок (используй 1h, 3d, 1w, 1M)'});
+      if(!dur) return json(res,400,{error:'Неверный срок (1h, 3d, 1w, 1M)'});
       to = from + dur;
     }
-    if(to <= from) return json(res,400,{error:'Дата окончания должна быть позже начала'});
+    if(to <= from) return json(res,400,{error:'Дата окончания должна быть позже'});
     const p = {
       id: DB.punishSeq++, type, userName,
       reason: String(reason).slice(0,500),
@@ -799,7 +710,7 @@ async function handleApi(req, res, pathname){
       createdAt: Date.now(), source: 'site'
     };
     DB.punishments.push(p); saveDB();
-    audit.punishment(`✅ <b>Наказание выдано</b>\n\n` + fmtPunish(p) + `\n🖥 Источник: <b>сайт</b>`);
+    audit.punishment(`✅ <b>Наказание выдано</b>\n\n` + fmtPunish(p) + `\n🖥 Источник: <b>сайт</b>`, p.type);
     return json(res,200,{ok:true, id:p.id, punishment:p});
   }
   if(m==='DELETE' && pathname.match(/^\/api\/punishments\/[^/]+$/)){
@@ -811,7 +722,7 @@ async function handleApi(req, res, pathname){
     p.removedBy = u.nickname || u.login;
     p.removedAt = Date.now();
     saveDB();
-    audit.punishment(`♻️ <b>Наказание снято</b>\n\n` + fmtPunish(p) + `\n👮 Снял: ${escapeHtml(u.nickname||u.login)}`);
+    audit.punishment(`♻️ <b>Наказание снято</b>\n\n` + fmtPunish(p) + `\n👮 Снял: ${escapeHtml(u.nickname||u.login)}`, p.type);
     return json(res,200,{ok:true});
   }
   if(m==='GET' && pathname.match(/^\/api\/punishments\/check\/[^/]+$/)){
@@ -867,8 +778,7 @@ async function handleApi(req, res, pathname){
     DB.screenshots.push({
       id:Date.now(), author:u.nickname, authorId:u.id, img, place:place||'', stock:stock||'',
       status:'pending', approvedAt:null, likes:[], dislikes:[], comments:[],
-      date:new Date().toLocaleDateString('ru'),
-      rejectReason:null
+      date:new Date().toLocaleDateString('ru'), rejectReason:null
     });
     saveDB();
     audit.screenshot(`👤 ${escapeHtml(u.nickname)}\n📍 ${escapeHtml(place||'—')}\n🚂 ${escapeHtml(stock||'—')}\nСтатус: <b>на модерации</b>`);
@@ -1292,9 +1202,7 @@ const server = http.createServer(async (req,res) => {
   }
 });
 
-server.on('error', (e) => {
-  console.error('❌ Server error:', e.message);
-});
+server.on('error', (e) => console.error('❌ Server error:', e.message));
 
 server.listen(PORT, '0.0.0.0', async () => {
   console.log('\n╔══════════════════════════════════════════════╗');
@@ -1316,10 +1224,7 @@ server.listen(PORT, '0.0.0.0', async () => {
       `🚀 <b>Сервер MFMIR V2 запущен</b>\n` +
       `🕒 ${new Date().toLocaleString('ru-RU')}\n` +
       `🔧 Порт: <code>${PORT}</code>\n` +
-      `🌐 URL: <code>${BASE_URL}</code>\n` +
-      `📧 Gmail: ${process.env.GMAIL_REFRESH_TOKEN ? '✅' : '⚠'}\n` +
-      `🤖 TG бот: ${TG_BOT_TOKEN ? '✅' : '⚠'}\n` +
-      `💬 TG группа: ${TG_GROUP_ID ? '✅' : '⚠'}\n\n` +
+      `🌐 URL: <code>${BASE_URL}</code>\n\n` +
       `<b>Команды в группе:</b>\n` +
       `<code>/бан @user 7d причина</code>\n` +
       `<code>/мут @user 1h причина</code>\n` +

@@ -1,7 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-define('DB_FILE', __DIR__ . '/adrenaline.sqlite');
+define('DB_FILE', '/var/data/adrenaline.sqlite');
 define('ROBLOX_API_KEY', 'ADRENALINE_KEY'); // смените!
 
 try {
